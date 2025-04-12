@@ -15,8 +15,14 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-    }
-}, { timestamps: true });
+    },
+    avatar: {
+        type: String,
+        default: 
+        "https://th.bing.com/th/id/OIP.kN8tEO6_wPf1PMEofLrdTgHaGh?rs=1&pid=ImgDetMain"
+    },
+},
+ { timestamps: true });
 
 const User = mongoose.model("User", userSchema);
 export default User;
