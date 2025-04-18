@@ -2,13 +2,21 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import userRouter from './routes/user.route.js';   
-import authRouter from './routes/auth.route.js'; 
+import authRouter from './routes/auth.route.js';
+import uploadRoute from './routes/upload.route.js'; 
 import cors from 'cors';    
+import cookieParser from 'cookie-parser';
+
+
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use("/api/", uploadRoute); 
+app.use(cookieParser());
+
+
 
 const corsOptions = {
   origin: 'http://localhost:3000', 
