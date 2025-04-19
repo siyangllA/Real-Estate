@@ -1,14 +1,14 @@
 import express from 'express';
-import upload from '../middleware/upload.js';  
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
-
-router.post('/upload', upload.single('image'), (req, res) => {
+router.post('/', upload.single('image'), (req, res) => {
   try {
-    res.status(200).json({ imageUrl: req.file.path });
+    const imageUrl = req.file.path; 
+    res.status(200).json({ imageUrl });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: 'Upload failed', error });
   }
 });
 

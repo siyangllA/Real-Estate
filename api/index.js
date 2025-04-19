@@ -14,7 +14,6 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
-app.use("/api/", uploadRoute); 
 app.use(cookieParser());
 
 
@@ -45,6 +44,7 @@ mongoose.connect(process.env.MONGO)
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/listing', listingRouter);
+app.use("/api/upload", uploadRoute);
 
 // Error middleware
 app.use((err, req, res, next) => { 
