@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
@@ -39,59 +40,54 @@ export default function CreateListing() {
     };
 
     fetchListing();
-  }, []);
+  }, [params.listingId]);
 
-  const handleImageSubmit = (e) => {
+  const uploadImageToCloudinary = async (file) => {
+    const formData = new FormData(); 
+    formData.append('file', file);
+  
+    const CLOUD_NAME = import.meta.env.VITE_CLOUD_NAME;
+    const UPLOAD_PRESET = import.meta.env.VITE_CLOUD_UPLOAD_PRESET;
+    formData.append('upload_preset', UPLOAD_PRESET); 
+  
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        formData
+      );
+      return response.data.secure_url;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Error uploading image to Cloudinary');
+    }
+  };
+  
+
+  const handleImageSubmit = async (e) => {
     if (files.length > 0 && files.length + formData.imageUrls.length < 7) {
       setUploading(true);
       setImageUploadError(false);
       const promises = [];
 
       for (let i = 0; i < files.length; i++) {
-        promises.push(storeImage(files[i]));
+        promises.push(uploadImageToCloudinary(files[i]));
       }
-      Promise.all(promises)
-        .then((urls) => {
-          setFormData({
-            ...formData,
-            imageUrls: formData.imageUrls.concat(urls),
-          });
-          setImageUploadError(false);
-          setUploading(false);
-        })
-        .catch((err) => {
-          setImageUploadError('Image upload failed (2 mb max per image)');
-          setUploading(false);
+
+      try {
+        const urls = await Promise.all(promises);
+        setFormData({
+          ...formData,
+          imageUrls: formData.imageUrls.concat(urls),
         });
+      } catch (err) {
+        setImageUploadError('Image upload failed (2 mb max per image)');
+      } finally {
+        setUploading(false);
+      }
     } else {
       setImageUploadError('You can only upload 6 images per listing');
       setUploading(false);
     }
-  };
-
-  const storeImage = async (file) => {
-    return new Promise((resolve, reject) => {
-      const storage = getStorage(app);
-      const fileName = new Date().getTime() + file.name;
-      const storageRef = ref(storage, fileName);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log(`Upload is ${progress}% done`);
-        },
-        (error) => {
-          reject(error);
-        },
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            resolve(downloadURL);
-          });
-        }
-      );
-    });
   };
 
   const handleRemoveImage = (index) => {
@@ -103,10 +99,7 @@ export default function CreateListing() {
 
   const handleChange = (e) => {
     if (e.target.id === 'sale' || e.target.id === 'rent') {
-      setFormData({
-        ...formData,
-        type: e.target.id,
-      });
+      setFormData({ ...formData, type: e.target.id });
     }
 
     if (
@@ -114,10 +107,7 @@ export default function CreateListing() {
       e.target.id === 'furnished' ||
       e.target.id === 'offer'
     ) {
-      setFormData({
-        ...formData,
-        [e.target.id]: e.target.checked,
-      });
+      setFormData({ ...formData, [e.target.id]: e.target.checked });
     }
 
     if (
@@ -125,10 +115,7 @@ export default function CreateListing() {
       e.target.type === 'text' ||
       e.target.type === 'textarea'
     ) {
-      setFormData({
-        ...formData,
-        [e.target.id]: e.target.value,
-      });
+      setFormData({ ...formData, [e.target.id]: e.target.value });
     }
   };
 
@@ -155,6 +142,7 @@ export default function CreateListing() {
       setLoading(false);
       if (data.success === false) {
         setError(data.message);
+        return;
       }
       navigate(`/listing/${data._id}`);
     } catch (error) {
@@ -162,6 +150,7 @@ export default function CreateListing() {
       setLoading(false);
     }
   };
+
   return (
     <main className='p-3 max-w-4xl mx-auto'>
       <h1 className='text-3xl font-semibold text-center my-7'>

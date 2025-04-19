@@ -24,7 +24,6 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Add headers for COOP and COEP
 app.use(cors(corsOptions)
 );
 

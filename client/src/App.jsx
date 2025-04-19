@@ -7,7 +7,7 @@ import About from './Pages/about';
 import Header from './components/Header';
 import PrivateRoute from './components/PrivateRoute';
 import CreateListing from './Pages/CreateListing';
-import UpdateListing from './pages/UpdateListing';
+import UpdateListing from './Pages/UpdateListing';
 
 
 export default function App() {
