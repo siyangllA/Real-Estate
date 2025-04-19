@@ -282,6 +282,7 @@ export default function CreateListing() {
                 {formData.type === 'rent' && (
                    <span className='text-xs'>($ / month)</span>
                  )}
+                 
               </div>
             </div>
             {formData.offer && (
