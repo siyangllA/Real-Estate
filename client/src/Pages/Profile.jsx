@@ -1,19 +1,16 @@
 import { useSelector } from 'react-redux';
 import { useRef, useState, useEffect } from 'react';
 import {
-  getDownloadURL,
-  getStorage,
-  ref,
-  uploadBytesResumable,
-} from 'firebase/storage';
-import { app } from '../firebase';
-import {updateUserStart, updateUserSuccess,
- updateUserFailure, deleteUserFailure,
-deleteUserStart, deleteUserSuccess,
-signOutUserStart, signOutUserSuccess,
-signOutUserFailure} from '../redux/user/userSlice';
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+  deleteUserFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  signOutUserStart,
+} from '../redux/user/userSlice';
 import { useDispatch } from 'react-redux';
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 
 export default function Profile() {
@@ -23,7 +20,7 @@ export default function Profile() {
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(false);
   const [formData, setFormData] = useState({});
-  const [updateSuccess, setUpdateSuccess] = useState(false);  
+  const [updateSuccess, setUpdateSuccess] = useState(false);
   const dispatch = useDispatch();
 
 
@@ -39,6 +36,7 @@ export default function Profile() {
     const fileName = new Date().getTime() + file.name;
     const storageRef = ref(storage, fileName);
     const uploadTask = uploadBytesResumable(storageRef, file);
+    
 
     uploadTask.on(
       'state_changed',
@@ -103,9 +101,8 @@ export default function Profile() {
     }
   };
 
-
   const handleSignOut = async () => {
- 
+
     try {
       dispatch(signOutUserStart())
       const res = await fetch('/api/auth/signout');
@@ -116,11 +113,9 @@ export default function Profile() {
       }
       dispatch(deleteUserSuccess(data));
     } catch (error) {
-      dispatch(deleteUserFailure(error.message));
+      dispatch(deleteUserFailure(data.message));
     }
   }
-
-
   return (
     <div className='p-3 max-w-lg mx-auto'>
       <h1 className='text-3xl font-semibold text-center my-7'>Profile</h1>
@@ -162,17 +157,17 @@ export default function Profile() {
         <input
           type='email'
           placeholder='email'
-          defaultValue={currentUser.email}
           id='email'
+          defaultValue={currentUser.email}
           className='border p-3 rounded-lg'
           onChange={handleChange}
         />
         <input
           type='password'
           placeholder='password'
+          onChange={handleChange}
           id='password'
           className='border p-3 rounded-lg'
-          onChange={handleChange}
         />
         <button
           disabled={loading}
@@ -180,19 +175,18 @@ export default function Profile() {
         >
           {loading ? 'Loading...' : 'Update'}
         </button>
-
         <Link className='bg-green-700 text-white p-3 rounded-lg uppercase text-center hover:opacity-95' to={"/create-listing"}>
-           Create Listing
-         </Link>
-
+          Create Listing
+        </Link>
       </form>
       <div className='flex justify-between mt-5'>
-        <span onClick={handleDeleteUser}
-        className='text-red-700 cursor-pointer'>
-          Delete account</span>
-        <span onClick={handleSignOut} className='text-red-700 
-        cursor-pointer'>
-          Sign out</span>
+        <span
+          onClick={handleDeleteUser}
+          className='text-red-700 cursor-pointer'
+        >
+          Delete account
+        </span>
+        <span onClick={handleSignOut} className='text-red-700 cursor-pointer'>Sign out</span>
       </div>
 
       <p className='text-red-700 mt-5'>{error ? error : ''}</p>
@@ -202,4 +196,5 @@ export default function Profile() {
     </div>
   );
 }
+
 
