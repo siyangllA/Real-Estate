@@ -9,6 +9,7 @@ import {
   deleteUserSuccess,
   signOutUserStart,
 } from '../redux/user/userSlice';
+import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 export default function Profile() {
@@ -28,28 +29,49 @@ const [file, setFile] = useState(undefined);
     }
   }, [file]);
 
-  const handleFileUpload = (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', 'real_estate_preset'); 
-
-    fetch('https://api.cloudinary.com/v1_1/VITE_CLOUD_NAME/image/upload', { 
-      method: 'POST',
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.secure_url) {
-          setFormData((prev) => ({ ...prev, avatar: data.secure_url }));
-        } else {
-          setFileUploadError(true);
+  const handleFileUpload = async (file) => {
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+    formDataUpload.append('upload_preset', import.meta.env.VITE_CLOUD_UPLOAD_PRESET);
+  
+    try {
+      const res = await axios.post(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUD_NAME}/image/upload`,
+        formDataUpload,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
         }
-      })
-      .catch(() => {
-        setFileUploadError(true);
+      );
+  
+      const imageUrl = res.data.secure_url;
+      setFormData((prev) => ({ ...prev, avatar: imageUrl }));
+      
+      const updateRes = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ avatar: imageUrl }),
       });
+  
+      const data = await updateRes.json();
+  
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        return;
+      }
+  
+      dispatch(updateUserSuccess(data)); 
+      setUpdateSuccess(true); 
+  
+    } catch (err) {
+      setFileUploadError(true);
+      console.error("Upload failed:", err.message);
+    }
   };
-
+  
+  
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -58,26 +80,28 @@ const [file, setFile] = useState(undefined);
     e.preventDefault();
     try {
       dispatch(updateUserStart());
+  
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData), 
       });
+  
       const data = await res.json();
       if (data.success === false) {
         dispatch(updateUserFailure(data.message));
         return;
       }
-
+  
       dispatch(updateUserSuccess(data));
       setUpdateSuccess(true);
     } catch (error) {
       dispatch(updateUserFailure(error.message));
     }
   };
-
+  
   const handleDeleteUser = async () => {
     try {
       dispatch(deleteUserStart());
@@ -157,17 +181,18 @@ const [file, setFile] = useState(undefined);
           accept='image/*'
         />
         <img
-          onClick={() => fileRef.current.click()}
-          src={formData.avatar || currentUser.avatar}
-          alt='profile'
-          className='rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2'
-        />
+        onClick={() => fileRef.current.click()}
+        src={formData.avatar || currentUser.avatar}
+        alt='profile'
+        className='rounded-full h-24 w-24 object-cover
+         cursor-pointer self-center mt-2'/>
+
         <p className='text-sm self-center'>
           {fileUploadError && (
             <span className='text-red-700'>
               Error uploading image (must be under 2MB)
             </span>
-          )}
+            )}
         </p>
         <input
           type='text'
@@ -178,11 +203,9 @@ const [file, setFile] = useState(undefined);
           onChange={handleChange}
         />
         <input
-          type='email'
-          placeholder='email'
+          type='email' placeholder='email'
           id='email'
-          defaultValue={currentUser.email}
-          className='border p-3 rounded-lg'
+          defaultValue={currentUser.email} className='border p-3 rounded-lg'
           onChange={handleChange}
         />
         <input
@@ -190,7 +213,7 @@ const [file, setFile] = useState(undefined);
           placeholder='password'
           onChange={handleChange}
           id='password'
-          className='border p-3 rounded-lg'
+        className='border p-3 rounded-lg'
         />
         <button
           disabled={loading}
@@ -265,3 +288,5 @@ const [file, setFile] = useState(undefined);
     </div>
   );
 }
+
+
