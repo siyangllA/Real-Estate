@@ -58,6 +58,5 @@ import mongoose from 'mongoose';
    { timestamps: true }
  );
  
- const Listing = mongoose.model('Listing', listingSchema);
+ export default mongoose.model('Listing', listingSchema);
  
- export default Listing;

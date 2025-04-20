@@ -24,8 +24,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-app.use(cors(corsOptions)
-);
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO)
