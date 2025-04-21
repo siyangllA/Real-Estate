@@ -7,14 +7,18 @@ import uploadRoute from './routes/upload.route.js';
 import listingRouter from './routes/listing.route.js';
 import cors from 'cors';    
 import cookieParser from 'cookie-parser';
+import path from 'path';
 
 
 
 dotenv.config();
 
 const app = express();
+const __dirname = path.resolve();
+
+
 app.use(express.json());
-app.use("/api/", uploadRoute); 
+
 app.use(cookieParser());
 
 
@@ -41,7 +45,17 @@ mongoose.connect(process.env.MONGO)
 // Routes
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
+app.use("/api/upload", uploadRoute); 
 app.use('/api/listing', listingRouter);
+
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, 'client', 'dist')));
+
+// Serve React app for all non-API routes
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
+});
+
 
 // Error middleware
 app.use((err, req, res, next) => { 
