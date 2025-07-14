@@ -250,13 +250,6 @@ const handleSubmit = async (e) => {
           defaultValue={currentUser.email} className='border p-3 rounded-lg'
           onChange={handleChange}
         />
-        <input
-          type='password'
-          placeholder='password'
-          onChange={handleChange}
-          id='password'
-        className='border p-3 rounded-lg'
-        />
         <button
           disabled={loading}
           className='bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80'
@@ -277,6 +270,14 @@ const handleSubmit = async (e) => {
         <span onClick={handleSignOut} className='text-red-700 cursor-pointer'>
           Sign out
         </span>
+      </div>
+      
+      <div className='mt-5 text-center'>
+        <Link to='/forgot-password'> 
+          <span className='text-blue-700 hover:underline cursor-pointer'>
+            Reset Password
+          </span> 
+        </Link>
       </div>
 
       {error && <p className='text-red-700 mt-5'>{error}</p>}
