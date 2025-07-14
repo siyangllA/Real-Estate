@@ -1,12 +1,13 @@
-import { GoogleAuthProvider, getAuth, signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
 import { app } from '../firebase';
 import { useDispatch } from 'react-redux';
-import { signInSuccess } from '../redux/user/userSlice';
+import { signInSuccess, signInFailure } from '../redux/user/userSlice';
 import { useNavigate } from 'react-router-dom';
 
 export default function OAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
   const handleGoogleClick = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -25,13 +26,41 @@ export default function OAuth() {
           photo: result.user.photoURL,
         }),
       });
+
+      // Check if the response is ok and has content
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Server response not ok:', res.status, errorText);
+        dispatch(signInFailure('Authentication failed. Please try again.'));
+        return;
+      }
+
+      // Check if response has content before parsing JSON
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Response is not JSON:', contentType);
+        const responseText = await res.text();
+        console.error('Response text:', responseText);
+        dispatch(signInFailure('Invalid response from server.'));
+        return;
+      }
+
       const data = await res.json();
+      
+      if (data.success === false) {
+        dispatch(signInFailure(data.message));
+        return;
+      }
+
       dispatch(signInSuccess(data));
       navigate('/');
+      
     } catch (error) {
-      console.log('could not sign in with google', error);
+      console.error('Google sign-in error:', error);
+      dispatch(signInFailure('Could not sign in with Google. Please try again.'));
     }
   };
+
   return (
     <button
       onClick={handleGoogleClick}

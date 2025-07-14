@@ -8,6 +8,10 @@ import listingRouter from './routes/listing.route.js';
 import cors from 'cors';    
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import User from './models/user.model.js';
+import { sendPasswordResetEmail } from './utils/emailService.js';
 
 
 
@@ -58,41 +62,62 @@ app.get(/^\/(?!api).*/, (req, res) => {
 
 app.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
-  UserModel.findOne({ email })
-  .then(user => {
+  
+  try {
+    const user = await User.findOne({ email });
+    
     if (!user) {
-      return res.send({status: "User not existed"})
+      return res.send({status: "User not existed"});
     }
+    
     const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, 
-      {expiresIn: 'id'})
+      {expiresIn: '1d'});
 
-
-      let transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'youremail@gmail.com',
-    pass: 'yourpassword'
+    // Send password reset email using the email service (only if configured)
+    try {
+      if (process.env.GMAIL_REFRESH_TOKEN) {
+        await sendPasswordResetEmail(email, user._id, token);
+        return res.send({Status: "Success"});
+      } else {
+        console.log('Email service not configured - cannot send password reset email');
+        return res.send({status: "Error", message: "Email service not configured"});
+      }
+    } catch (emailError) {
+      console.error('Failed to send password reset email:', emailError);
+      return res.send({status: "Error", message: "Failed to send email"});
+    }
+    
+  } catch (error) {
+    console.error('Error in forgot-password route:', error);
+    return res.send({status: "Error", message: error.message});
   }
 });
 
-let mailOptions = {
-  from: 'youremail@gmail.com',
-  to: 'myfriend@yahoo.com',
-  subject: 'Reset your password Link',
-  text: 'http://localhost:5173/reset-password/${user._id}/${token}'
-};
+app.post('/reset-password/:id/:token', async (req, res) => {
+  const { id, token } = req.params;
+  const { password } = req.body;
 
-transporter.sendMail(mailOptions, function(error, info){
-  if (error) {
-    console.log(error);
-  } else {
-    return res.send({Status: "Success"})
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    if (decoded.id !== id) {
+      return res.send({Status: "Invalid token"});
+    }
+
+    // Hash the new password
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    // Update the user's password
+    await User.findByIdAndUpdate(id, { password: hashedPassword });
+
+    return res.send({Status: "Success"});
+    
+  } catch (error) {
+    console.error('Error in reset-password route:', error);
+    return res.send({Status: "Error", message: error.message});
   }
 });
-
-
-    })
-})
 
 // Error middleware
 app.use((err, req, res, next) => { 
@@ -104,16 +129,3 @@ app.use((err, req, res, next) => {
     message,
   });
 });
-
-if (process.env.NODE_ENV !== 'test') {
-  mongoose.connect(process.env.MONGO)
-    .then(() => {
-      console.log('Connected to MongoDB!');
-      app.listen(3000, () => {
-        console.log('Server is running on port 3000!');
-      });
-    })
-    .catch((err) => {
-      console.error('MongoDB connection error:', err);
-    });
-}
