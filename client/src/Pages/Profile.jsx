@@ -12,6 +12,7 @@ import {
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
+
 export default function Profile() {
   const fileRef = useRef(null);
   const { currentUser, loading, error } = useSelector((state) => state.user);
@@ -22,6 +23,11 @@ const [file, setFile] = useState(undefined);
   const [showListingsError, setShowListingsError] = useState(false);
   const [userListings, setUserListings] = useState([]);
   const dispatch = useDispatch();
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusMessage, setUploadStatusMessage] = useState('');
+  const token = currentUser.token || localStorage.getItem('token');
+
+
   
   useEffect(() => {
     if (file) {
@@ -33,16 +39,39 @@ const [file, setFile] = useState(undefined);
     const formDataUpload = new FormData();
     formDataUpload.append('file', file);
     formDataUpload.append('upload_preset', import.meta.env.VITE_CLOUD_UPLOAD_PRESET);
+
+
+      let fakeProgress = 0;
+  setUploadProgress(0);
+  setUploadStatusMessage('Image uploading... (0%)');
+
+  const progressInterval = setInterval(() => {
+    fakeProgress += Math.floor(Math.random() * 10) + 5;
+    if (fakeProgress >= 95) {
+      fakeProgress = 95;
+      clearInterval(progressInterval); 
+    }
+    setUploadProgress(fakeProgress);
+    setUploadStatusMessage(`Image uploading... (${fakeProgress}%)`);
+  }, 200);
+
   
     try {
+
       const res = await axios.post(
         `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUD_NAME}/image/upload`,
         formDataUpload,
         {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         }
       );
-  
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      setUploadStatusMessage('Image uploaded successfully!');
+      
       const imageUrl = res.data.secure_url;
       setFormData((prev) => ({ ...prev, avatar: imageUrl }));
       
@@ -63,9 +92,11 @@ const [file, setFile] = useState(undefined);
   
       dispatch(updateUserSuccess(data)); 
       setUpdateSuccess(true); 
-  
+      
     } catch (err) {
+      clearInterval(progressInterval);
       setFileUploadError(true);
+      setUploadStatusMessage('Image upload failed!');
       console.error("Upload failed:", err.message);
     }
   };
@@ -76,31 +107,36 @@ const [file, setFile] = useState(undefined);
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      dispatch(updateUserStart());
-  
-      const res = await fetch(`/api/user/update/${currentUser._id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData), 
-      });
-  
-      const data = await res.json();
-      if (data.success === false) {
-        dispatch(updateUserFailure(data.message));
-        return;
-      }
-  
-      dispatch(updateUserSuccess(data));
-      setUpdateSuccess(true);
-    } catch (error) {
-      dispatch(updateUserFailure(error.message));
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const token = currentUser?.token || localStorage.getItem('token');
+
+  try {
+    dispatch(updateUserStart());
+
+    const res = await fetch(`/api/user/update/${currentUser._id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await res.json();
+
+    if (data.success === false) {
+      dispatch(updateUserFailure(data.message));
+      return;
     }
-  };
+
+    dispatch(updateUserSuccess(data));
+    setUpdateSuccess(true);
+  } catch (error) {
+    dispatch(updateUserFailure(error.message));
+  }
+};
+
   
   const handleDeleteUser = async () => {
     try {
@@ -186,14 +222,20 @@ const [file, setFile] = useState(undefined);
         alt='profile'
         className='rounded-full h-24 w-24 object-cover
          cursor-pointer self-center mt-2'/>
-
-        <p className='text-sm self-center'>
+         
+         
+         <p className='text-sm self-center'>
           {fileUploadError && (
             <span className='text-red-700'>
               Error uploading image (must be under 2MB)
-            </span>
+              </span>
             )}
-        </p>
+            {uploadStatusMessage && (
+              <span className='text-green-700'>{uploadStatusMessage}</span>
+              )}
+              </p>
+
+
         <input
           type='text'
           placeholder='username'

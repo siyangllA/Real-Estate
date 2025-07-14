@@ -10,6 +10,8 @@ import CreateListing from './Pages/CreateListing';
 import UpdateListing from './Pages/UpdateListing';
 import Listing from './Pages/Listing';
 import Search from './Pages/Search';
+import ForgotPassword from './components/ForgotPassword'; 
+
 
 export default function App() {
   return (
@@ -22,6 +24,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/search" element={<Search />} />
         <Route path="/listing/:listingId" element={<Listing />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Placeholder for forgot password page */}
 
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>

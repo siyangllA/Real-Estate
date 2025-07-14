@@ -56,6 +56,43 @@ app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'dist', 'index.html'));
 });
 
+app.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  UserModel.findOne({ email })
+  .then(user => {
+    if (!user) {
+      return res.send({status: "User not existed"})
+    }
+    const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, 
+      {expiresIn: 'id'})
+
+
+      let transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'youremail@gmail.com',
+    pass: 'yourpassword'
+  }
+});
+
+let mailOptions = {
+  from: 'youremail@gmail.com',
+  to: 'myfriend@yahoo.com',
+  subject: 'Reset your password Link',
+  text: 'http://localhost:5173/reset-password/${user._id}/${token}'
+};
+
+transporter.sendMail(mailOptions, function(error, info){
+  if (error) {
+    console.log(error);
+  } else {
+    return res.send({Status: "Success"})
+  }
+});
+
+
+    })
+})
 
 // Error middleware
 app.use((err, req, res, next) => { 
@@ -67,3 +104,16 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
+if (process.env.NODE_ENV !== 'test') {
+  mongoose.connect(process.env.MONGO)
+    .then(() => {
+      console.log('Connected to MongoDB!');
+      app.listen(3000, () => {
+        console.log('Server is running on port 3000!');
+      });
+    })
+    .catch((err) => {
+      console.error('MongoDB connection error:', err);
+    });
+}

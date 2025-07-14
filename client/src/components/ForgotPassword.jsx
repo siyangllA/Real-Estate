@@ -1,17 +1,15 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   signInStart,
   signInSuccess,
   signInFailure,
 } from '../redux/user/userSlice';
-import OAuth from '../components/OAuth';
 
-export default function SignIn() {
+export default function ForgotPassword() {
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
   });
 
   const { loading, error } = useSelector((state) => state.user);
@@ -28,31 +26,30 @@ export default function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.email || !formData.password) {
-      dispatch(signInFailure('Email and password are required!'));
+    if (!formData.email) {
+      dispatch(signInFailure('Email is required!'));
       return;
     }
 
     try {
       dispatch(signInStart());
 
-      const res = await fetch('/api/auth/signin', {
-        method: 'POST',
+      const res = await fetch('/api/auth/forgot-password', {  
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ email: formData.email }),
       });
 
       const data = await res.json();
 
       if (!res.ok || data.success === false) {
-        dispatch(signInFailure(data.message || 'Sign in failed!'));
+        dispatch(signInFailure(data.message || 'Request failed!'));
         return;
       }
 
       dispatch(signInSuccess(data));
-      navigate('/');
+      navigate('/login'); 
     } catch (err) {
       dispatch(signInFailure(err.message || 'An error occurred!'));
     }
@@ -60,7 +57,7 @@ export default function SignIn() {
 
   return (
     <div className='p-3 max-w-lg mx-auto'>
-      <h1 className='text-3xl text-center font-semibold my-7'>Sign In</h1>
+      <h1 className='text-3xl text-center font-semibold my-7'>Forgot Password</h1>
       <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
         <input
           type='email'
@@ -71,34 +68,14 @@ export default function SignIn() {
           onChange={handleChange}
           required
         />
-        <input
-          type='password'
-          placeholder='Password'
-          className='border p-3 rounded-lg'
-          id='password'
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
         <button
+          type='submit'
           disabled={loading}
           className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'
         >
-          {loading ? 'Loading...' : 'Sign In'}
+          {loading ? 'Loading...' : 'Send'}
         </button>
-        <OAuth />
       </form>
-      <div className='flex gap-2 mt-5'>
-        <p>Don't have an account?
-          <br />
-        <Link to='/forgot-password'> 
-        <span className='text-red-700'>Forgot Password</span> 
-        </Link>
-        </p>
-        <Link to='/sign-up'>
-          <span className='text-blue-700'>Sign up</span>
-        </Link>
-      </div>
       {error && <p className='text-red-500 mt-5'>{error}</p>}
     </div>
   );

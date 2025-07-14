@@ -70,23 +70,6 @@ export default function Home() {
          </Link>
        </div>
  
-       {/* swiper */}
-       <Swiper navigation>
-         {offerListings &&
-           offerListings.length > 0 &&
-           offerListings.map((listing) => (
-           <SwiperSlide key={listing._id}>
-            <div
-            style={{
-              background: `url(${listing.imageUrls[0]}) center no-repeat`,
-              backgroundSize: 'cover',
-            }}
-            className='h-[500px]'
-            ></div>
-            </SwiperSlide>
-          ))}
-       </Swiper>
- 
        {/* listing results for offer, sale and rent */}
  
        <div className='max-w-6xl mx-auto p-3 flex flex-col gap-8 my-10'>

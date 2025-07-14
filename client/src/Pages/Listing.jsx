@@ -9,8 +9,6 @@ import {
     FaBath,
     FaBed,
     FaChair,
-    FaMapMarkedAlt,
-    FaMapMarkerAlt,
     FaParking,
     FaShare,
   } from 'react-icons/fa';
@@ -111,11 +109,6 @@ export default function Listing() {
     </span>
   )}
 </p>
-
-        <p className='flex items-center mt-6 gap-2 text-slate-600  text-sm'>
-               <FaMapMarkerAlt className='text-green-700' />
-               {listing.address}
-             </p>
              <div className='flex gap-4'>
                <p className='bg-red-900 w-full max-w-[200px] text-white text-center p-1 rounded-md'>
                  {listing.type === 'rent' ? 'For Rent' : 'For Sale'}
