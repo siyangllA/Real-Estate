@@ -49,12 +49,7 @@ export default function ForgotPassword() {
       }
 
       setCurrentStep(2);
-      // Always show OTP in development mode
-      if (data.developmentOTP) {
-        setError(`✅ OTP Generated: ${data.developmentOTP} (Copy this OTP)`);
-      } else {
-        setError(`OTP sent to ${formData.email}. Please check your email.`);
-      }
+      setError(`OTP sent to ${formData.email}. Please check your email.`);
     } catch (err) {
       setError(err.message || 'An error occurred!');
     } finally {
@@ -134,12 +129,7 @@ export default function ForgotPassword() {
         return;
       }
 
-      // Always show OTP in development mode
-      if (data.developmentOTP) {
-        setError(`✅ OTP Resent: ${data.developmentOTP} (Copy this OTP)`);
-      } else {
-        setError('OTP resent successfully!');
-      }
+      setError('OTP resent successfully!');
     } catch (error) {
       setError(error.message || 'Server error');
     } finally {

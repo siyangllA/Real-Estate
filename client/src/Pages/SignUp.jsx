@@ -48,13 +48,7 @@ export default function SignUp() {
         return;
       }
 
-      setCurrentStep(2);
-      // Always show OTP in development mode
-      if (data.developmentOTP) {
-        setError(`✅ OTP Generated: ${data.developmentOTP} (Copy this OTP)`);
-      } else {
-        setError(`OTP sent to ${formData.email}. Please check your email.`);
-      }
+
     } catch (error) {
       setError(error.message || 'Server error');
     } finally {
