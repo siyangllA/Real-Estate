@@ -75,7 +75,7 @@ app.post('/forgot-password', async (req, res) => {
 
     // Send password reset email using the email service (only if configured)
     try {
-      if (process.env.GMAIL_REFRESH_TOKEN) {
+      if (process.env.GMAIL_APP_PASSWORD) {
         await sendPasswordResetEmail(email, user._id, token);
         return res.send({Status: "Success"});
       } else {
